@@ -133,11 +133,13 @@ class SQLiteStatement : NSObject {
         var cColumn:CInt = CInt(column)
         
         var c = sqlite3_column_text(self.cStatement, cColumn)
-        
+
         if ( c ) {
-            var cString = CString(c)
             
-            return String.fromCString(cString)
+            var cStringPtr = UnsafePointer<Int8>(c);
+            var cString = CString(cStringPtr);
+            
+            return String.fromCString(cString);
         }
         else {
             return nil
@@ -165,9 +167,11 @@ class SQLiteStatement : NSObject {
         var c = sqlite3_column_text(self.cStatement, cColumn)
         
         if ( c ) {
-            var cString = CString(c)
             
-            return String.fromCString(cString).toDate()
+            var cStringPtr = UnsafePointer<Int8>(c);
+            var cString = CString(cStringPtr);
+            
+            return String.fromCString(cString)!.toDate()
         }
         else {
             return nil
