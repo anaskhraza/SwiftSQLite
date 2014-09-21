@@ -27,7 +27,7 @@ extension String {
         
         var dateFormatter = NSDateFormatter()
         dateFormatter.dateFormat = isoStringFormat
-
+        
         return dateFormatter.dateFromString(self)
     }
 }
@@ -49,9 +49,11 @@ class SQLiteStatement : NSObject {
     
     func prepare(sqlQuery:String) -> SQLiteStatusCode {
         
-        var cSqlQuery:CString = sqlQuery.bridgeToObjectiveC().UTF8String
+        var cSqlQuery = sqlQuery.cStringUsingEncoding(NSUTF8StringEncoding)
         
-        return SQLiteStatusCode.fromRaw(sqlite3_prepare_v2(self.database.cDb, cSqlQuery, -1, &self.cStatement, nil))!
+        var cStatusCode = sqlite3_prepare_v2(self.database.cDb, cSqlQuery!, -1, &self.cStatement, nil)
+        
+        return SQLiteStatusCode.fromRaw(cStatusCode)!
     }
     
     // Binding
@@ -60,70 +62,88 @@ class SQLiteStatement : NSObject {
         
         var cColumn:CInt = CInt(column)
         
-        if ( value ) {
-            var cValue:CString = value!.bridgeToObjectiveC().UTF8String
+        if let v = value {
             
-            return SQLiteStatusCode.fromRaw(bridged_sqlite3_bind_text(self.cStatement, cColumn, cValue, -1))!
+            var cValue = v.cStringUsingEncoding(NSUTF8StringEncoding)
+            
+            var cStatusCode = bridged_sqlite3_bind_text(self.cStatement, cColumn, cValue!, -1)
+            
+            return SQLiteStatusCode.fromRaw(cStatusCode)!
         }
-        else {
-            return SQLiteStatusCode.fromRaw(sqlite3_bind_null(self.cStatement, cColumn))!
-        }
+        
+        var cStatusCode = sqlite3_bind_null(self.cStatement, cColumn)
+        
+        return SQLiteStatusCode.fromRaw(cStatusCode)!
     }
     
     func bindDate(column:Int, value:NSDate?) -> SQLiteStatusCode {
         
         var cColumn:CInt = CInt(column)
         
-        if ( value ) {
+        if let v = value {
             
-            var cValue = value!.toString().bridgeToObjectiveC().UTF8String
+            var cValue = v.toString().cStringUsingEncoding(NSUTF8StringEncoding)
             
-            return SQLiteStatusCode.fromRaw(bridged_sqlite3_bind_text(self.cStatement, cColumn, cValue, -1))!
+            var cStatusCode = bridged_sqlite3_bind_text(self.cStatement, cColumn, cValue!, -1)
+            
+            return SQLiteStatusCode.fromRaw(cStatusCode)!
         }
-        else {
-            return SQLiteStatusCode.fromRaw(sqlite3_bind_null(self.cStatement, cColumn))!
-        }
+        
+        var cStatusCode = sqlite3_bind_null(self.cStatement, cColumn)
+        
+        return SQLiteStatusCode.fromRaw(cStatusCode)!
     }
     
     func bindInt(column:Int, value:Int?) -> SQLiteStatusCode {
         
         var cColumn:CInt = CInt(column)
         
-        if ( value ) {
-        
-            var cValue:CInt = CInt(value!)
+        if let v = value {
             
-            return SQLiteStatusCode.fromRaw(sqlite3_bind_int(self.cStatement, cColumn, cValue))!
+            var cValue = CInt(v)
+            
+            var cStatusCode = sqlite3_bind_int(self.cStatement, cColumn, cValue)
+            
+            return SQLiteStatusCode.fromRaw(cStatusCode)!
         }
-        else {
-            return SQLiteStatusCode.fromRaw(sqlite3_bind_null(self.cStatement, cColumn))!
-        }
+        
+        var cStatusCode = sqlite3_bind_null(self.cStatement, cColumn)
+        
+        return SQLiteStatusCode.fromRaw(cStatusCode)!
     }
     
     func bindBool(column:Int, value:Bool?) -> SQLiteStatusCode {
         
         var cColumn:CInt = CInt(column)
         
-        if ( value ) {
-            var cValue:CInt = value ? CInt(1) : CInt(0)
+        if let v = value {
             
-            return SQLiteStatusCode.fromRaw(sqlite3_bind_int(self.cStatement, cColumn, cValue))!
+            var cValue = v ? CInt(1) : CInt(0)
+            
+            var cStatusCode = sqlite3_bind_int(self.cStatement, cColumn, cValue)
+            
+            return SQLiteStatusCode.fromRaw(cStatusCode)!
         }
-        else {
-            return SQLiteStatusCode.fromRaw(sqlite3_bind_null(self.cStatement, cColumn))!
-        }
+        
+        var cStatusCode = sqlite3_bind_null(self.cStatement, cColumn)
+        
+        return SQLiteStatusCode.fromRaw(cStatusCode)!
     }
     
     func bindData(column:Int, value:NSData?) -> SQLiteStatusCode {
         
         var cColumn:CInt = CInt(column)
         
-        if ( value ) {
-            return SQLiteStatusCode.fromRaw(bridged_sqlite3_bind_blob(self.cStatement, cColumn, value!.bytes, CInt(value!.length)))!
+        if let v = value {
+            
+            var cStatusCode = bridged_sqlite3_bind_blob(self.cStatement, cColumn, value!.bytes, CInt(value!.length))
+            
+            return SQLiteStatusCode.fromRaw(cStatusCode)!
         }
-        else {
-            return SQLiteStatusCode.fromRaw(sqlite3_bind_null(self.cStatement, cColumn))!
-        }
+        
+        var cStatusCode = sqlite3_bind_null(self.cStatement, cColumn)
+        
+        return SQLiteStatusCode.fromRaw(cStatusCode)!
     }
     
     // Getters
@@ -133,13 +153,12 @@ class SQLiteStatement : NSObject {
         var cColumn:CInt = CInt(column)
         
         var c = sqlite3_column_text(self.cStatement, cColumn)
-
-        if ( c ) {
+        
+        if ( c != nil ) {
             
-            var cStringPtr = UnsafePointer<Int8>(c);
-            var cString = CString(cStringPtr);
+            var cStringPtr = UnsafePointer<Int8>(c)
             
-            return String.fromCString(cString);
+            return String.fromCString(cStringPtr)
         }
         else {
             return nil
@@ -154,6 +173,7 @@ class SQLiteStatement : NSObject {
     }
     
     func getBoolAt( column:Int ) -> Bool {
+        
         var cColumn:CInt = CInt(column)
         
         var cInt = sqlite3_column_int(self.cStatement, cColumn)
@@ -166,12 +186,10 @@ class SQLiteStatement : NSObject {
         
         var c = sqlite3_column_text(self.cStatement, cColumn)
         
-        if ( c ) {
+        if ( c != nil ) {
             
             var cStringPtr = UnsafePointer<Int8>(c);
-            var cString = CString(cStringPtr);
-            
-            return String.fromCString(cString)!.toDate()
+            return String.fromCString(cStringPtr)?.toDate()
         }
         else {
             return nil
