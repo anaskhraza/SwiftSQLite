@@ -20,7 +20,7 @@ class SQLiteDatabase : NSObject {
         
         var cFilename = filename.cStringUsingEncoding(NSUTF8StringEncoding)
         
-        return SQLiteStatusCode.fromRaw(sqlite3_open(cFilename!, &self.cDb))!
+        return SQLiteStatusCode(rawValue: sqlite3_open(cFilename!, &self.cDb))!
     }
 }
 
