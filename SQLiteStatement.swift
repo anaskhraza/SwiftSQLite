@@ -237,6 +237,13 @@ class SQLiteStatement : NSObject {
         return Double(sqlite3_column_double(self.cStatement, cColumn))
     }
     
+    func getDataAt( column:Int ) -> NSData! {
+        
+        var cColumn:CInt = CInt(column)
+
+        return NSData(bytes:sqlite3_column_blob(self.cStatement, cColumn), length:Int(sqlite3_column_bytes(self.cStatement, cColumn)))
+    }
+    
     // Other stuff
     
     func step() -> SQLiteStatusCode {
