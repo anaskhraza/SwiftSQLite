@@ -153,9 +153,12 @@ class SQLiteStatement : NSObject {
         
         if let v = value {
             
-            var cStatusCode = bridged_sqlite3_bind_blob(self.cStatement, cColumn, value!.bytes, CInt(value!.length))
+            if ( v.length > 0 ) {
+                
+                var cStatusCode = bridged_sqlite3_bind_blob(self.cStatement, cColumn, value!.bytes, CInt(value!.length))
             
-            return SQLiteStatusCode(rawValue: cStatusCode)!
+                return SQLiteStatusCode(rawValue: cStatusCode)!
+            }
         }
         
         return bindNull(cColumn)
