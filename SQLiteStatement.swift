@@ -146,6 +146,24 @@ class SQLiteStatement : NSObject {
         return SQLiteStatusCode(rawValue: cStatusCode)!
     }
     
+    func bindDouble(column:Int, value:Double?) -> SQLiteStatusCode {
+        
+        var cColumn:CInt = CInt(column)
+        
+        if let v = value {
+            
+            var cValue = CDouble(v)
+            
+            var cStatusCode = sqlite3_bind_double(self.cStatement, cColumn, cValue)
+            
+            return SQLiteStatusCode(rawValue: cStatusCode)!
+        }
+
+        var cStatusCode = sqlite3_bind_null(self.cStatement, cColumn)
+
+        return SQLiteStatusCode(rawValue: cStatusCode)!
+    }
+    
     // Getters
     
     func getStringAt( column:Int ) -> String? {
@@ -194,6 +212,13 @@ class SQLiteStatement : NSObject {
         else {
             return nil
         }
+    }
+    
+    func getDoubleAt( column: Int ) -> Double {
+    
+        var cColumn:CInt = CInt(column)
+        
+        return Double(sqlite3_column_double(self.cStatement, cColumn))
     }
     
     // Other stuff
