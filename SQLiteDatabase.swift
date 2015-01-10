@@ -9,7 +9,6 @@
 import Foundation
 
 let blankDatabaseFilename:String = "Blank.sqlite"
-
 let instanceDatabaseFilename:String = "Instance.sqlite"
 
 var _SQLiteDatabase:SQLiteDatabase?
@@ -27,6 +26,64 @@ class SQLiteDatabase : NSObject {
         var cFilename = filename.cStringUsingEncoding(NSUTF8StringEncoding)
         
         return SQLiteStatusCode(rawValue: sqlite3_open(cFilename!, &self.cDb))!
+    }
+    
+    class func deleteDatabase() {
+        
+        if let pathToResources = NSBundle.mainBundle().resourcePath {
+            
+            var pathToDocuments = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
+            
+            var documentsDirectory:AnyObject = pathToDocuments[0]
+            
+            var databasePath = documentsDirectory.stringByAppendingPathComponent(instanceDatabaseFilename)
+            
+            if ( NSFileManager.defaultManager().isReadableFileAtPath(databasePath) ) {
+                
+                var error:NSError?
+                
+                if ( !NSFileManager.defaultManager().removeItemAtPath(databasePath, error: &error) ) {
+                    
+                    println(error)
+                    
+                    println("Failed to delete database")
+                }
+            }
+        }
+    }
+    
+    func copyDatabase() -> String? {
+        
+        if let pathToResources = NSBundle.mainBundle().resourcePath {
+            
+            var blankDatabasePath = pathToResources.stringByAppendingPathComponent(blankDatabaseFilename)
+            
+            var pathToDocuments = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
+            
+            var documentsDirectory:AnyObject = pathToDocuments[0]
+            
+            var databasePath = documentsDirectory.stringByAppendingPathComponent(instanceDatabaseFilename)
+            
+            println( "database path: \(databasePath)" )
+            
+            if ( !NSFileManager.defaultManager().isReadableFileAtPath(databasePath) ) {
+                
+                var error:NSError?
+                
+                if ( !NSFileManager.defaultManager().copyItemAtPath(blankDatabasePath, toPath: databasePath, error: &error)) {
+                    
+                    println(error)
+                    
+                    println("Failed to initialize database")
+                    
+                    return nil
+                }
+            }
+            
+            return databasePath
+        }
+        
+        return nil
     }
     
     // MARK: Transaction
@@ -55,4 +112,5 @@ class SQLiteDatabase : NSObject {
         return String.fromCString(sqlite3_errmsg(self.cDb))
     }
 }
+
 
