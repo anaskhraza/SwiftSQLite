@@ -45,7 +45,7 @@ class SQLiteStatement : NSObject {
         self.database = database
     }
     
-    // Prepare
+    // MARK: Prepare
     
     func prepare(sqlQuery:String) -> SQLiteStatusCode {
         
@@ -56,7 +56,16 @@ class SQLiteStatement : NSObject {
         return SQLiteStatusCode(rawValue: cStatusCode)!
     }
     
-    // Binding
+    // MARK: Reset
+    
+    func reset() -> SQLiteStatusCode {
+        
+        var cStatusCode = sqlite3_reset(self.cStatement)
+        
+        return SQLiteStatusCode(rawValue: cStatusCode)!
+    }
+    
+    // MARK: Binding
     
     func bindNull(column:Int) -> SQLiteStatusCode {
         
@@ -180,7 +189,7 @@ class SQLiteStatement : NSObject {
         return bindNull(cColumn)
     }
     
-    // Getters
+    // MARK: Getters
     
     func getStringAt( column:Int ) -> String? {
         
@@ -216,6 +225,7 @@ class SQLiteStatement : NSObject {
     }
     
     func getDateAt( column:Int ) -> NSDate! {
+    
         var cColumn:CInt = CInt(column)
         
         var c = sqlite3_column_text(self.cStatement, cColumn)
