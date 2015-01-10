@@ -7,13 +7,14 @@ Object oriented
 ---
 As sqlite itself is largely laid out in an object oriented fashion, this library appropriately wraps to an appropriate object oriented design (e.g. ```*sqlite3_stmt``` and any C functional that takes ```*sqlite3_stmt``` as its first parameter are mapped to the Swift class ```SQLiteStatement```).
 
+Setting up the database
+---
+Ensure that Blank.sqlite is included as a resource in your project, and set the ```instanceDatabaseFilename:String = "Instance.sqlite"``` line in ```SQLiteDatabase.swift``` appropriately. The first time you call ```SQLiteDatabase.sharedInstance```, a new database file will be created from the blank file.
+
 Example usage
 ---
 
-    var db = SQLiteDatabase();
-    db.open("/path/to/database.sqlite");
-        
-    var statement = SQLiteStatement(database: db);
+    var statement = SQLiteStatement(database: SQLiteDatabase.sharedInstance)
         
     if ( statement.prepare("SELECT * FROM tableName WHERE Id = ?") != .Ok )
     {
