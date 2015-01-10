@@ -45,7 +45,7 @@ class SQLiteStatement : NSObject {
         self.database = database
     }
     
-    // Prepare
+    // MARK: Prepare
     
     func prepare(sqlQuery:String) -> SQLiteStatusCode {
         
@@ -56,7 +56,28 @@ class SQLiteStatement : NSObject {
         return SQLiteStatusCode(rawValue: cStatusCode)!
     }
     
-    // Binding
+    // MARK: Reset
+    
+    func reset() -> SQLiteStatusCode {
+        
+        var cStatusCode = sqlite3_reset(self.cStatement)
+        
+        return SQLiteStatusCode(rawValue: cStatusCode)!
+    }
+    
+    // MARK: Binding
+    
+    func bindNull(column:Int) -> SQLiteStatusCode {
+        
+        return bindNull(CInt(column))
+    }
+    
+    func bindNull(cColumn:CInt) -> SQLiteStatusCode {
+        
+        var cStatusCode = sqlite3_bind_null(self.cStatement, cColumn)
+        
+        return SQLiteStatusCode(rawValue: cStatusCode)!
+    }
     
     func bindString(column:Int, value:String?) -> SQLiteStatusCode {
         
@@ -71,9 +92,7 @@ class SQLiteStatement : NSObject {
             return SQLiteStatusCode(rawValue: cStatusCode)!
         }
         
-        var cStatusCode = sqlite3_bind_null(self.cStatement, cColumn)
-        
-        return SQLiteStatusCode(rawValue: cStatusCode)!
+        return bindNull(cColumn)
     }
     
     func bindDate(column:Int, value:NSDate?) -> SQLiteStatusCode {
@@ -89,11 +108,22 @@ class SQLiteStatement : NSObject {
             return SQLiteStatusCode(rawValue: cStatusCode)!
         }
         
-        var cStatusCode = sqlite3_bind_null(self.cStatement, cColumn)
-        
-        return SQLiteStatusCode(rawValue: cStatusCode)!
+        return bindNull(cColumn)
     }
     
+    func bindIntPrimaryKey(column:Int, value:Int?) -> SQLiteStatusCode {
+
+        if let v = value {
+
+            if v > 0 {
+
+                return self.bindInt(column, value: v)
+            }
+        }
+
+        return bindNull(column)
+    }
+
     func bindInt(column:Int, value:Int?) -> SQLiteStatusCode {
         
         var cColumn:CInt = CInt(column)
@@ -107,9 +137,7 @@ class SQLiteStatement : NSObject {
             return SQLiteStatusCode(rawValue: cStatusCode)!
         }
         
-        var cStatusCode = sqlite3_bind_null(self.cStatement, cColumn)
-        
-        return SQLiteStatusCode(rawValue: cStatusCode)!
+        return bindNull(cColumn)
     }
     
     func bindBool(column:Int, value:Bool?) -> SQLiteStatusCode {
@@ -125,9 +153,7 @@ class SQLiteStatement : NSObject {
             return SQLiteStatusCode(rawValue: cStatusCode)!
         }
         
-        var cStatusCode = sqlite3_bind_null(self.cStatement, cColumn)
-        
-        return SQLiteStatusCode(rawValue: cStatusCode)!
+        return bindNull(cColumn)
     }
     
     func bindData(column:Int, value:NSData?) -> SQLiteStatusCode {
@@ -136,17 +162,34 @@ class SQLiteStatement : NSObject {
         
         if let v = value {
             
-            var cStatusCode = bridged_sqlite3_bind_blob(self.cStatement, cColumn, value!.bytes, CInt(value!.length))
+            if ( v.length > 0 ) {
+                
+                var cStatusCode = bridged_sqlite3_bind_blob(self.cStatement, cColumn, value!.bytes, CInt(value!.length))
+            
+                return SQLiteStatusCode(rawValue: cStatusCode)!
+            }
+        }
+        
+        return bindNull(cColumn)
+    }
+    
+    func bindDouble(column:Int, value:Double?) -> SQLiteStatusCode {
+        
+        var cColumn:CInt = CInt(column)
+        
+        if let v = value {
+            
+            var cValue = CDouble(v)
+            
+            var cStatusCode = sqlite3_bind_double(self.cStatement, cColumn, cValue)
             
             return SQLiteStatusCode(rawValue: cStatusCode)!
         }
-        
-        var cStatusCode = sqlite3_bind_null(self.cStatement, cColumn)
-        
-        return SQLiteStatusCode(rawValue: cStatusCode)!
+
+        return bindNull(cColumn)
     }
     
-    // Getters
+    // MARK: Getters
     
     func getStringAt( column:Int ) -> String? {
         
@@ -182,6 +225,7 @@ class SQLiteStatement : NSObject {
     }
     
     func getDateAt( column:Int ) -> NSDate! {
+    
         var cColumn:CInt = CInt(column)
         
         var c = sqlite3_column_text(self.cStatement, cColumn)
@@ -194,6 +238,20 @@ class SQLiteStatement : NSObject {
         else {
             return nil
         }
+    }
+    
+    func getDoubleAt( column: Int ) -> Double {
+    
+        var cColumn:CInt = CInt(column)
+        
+        return Double(sqlite3_column_double(self.cStatement, cColumn))
+    }
+    
+    func getDataAt( column:Int ) -> NSData! {
+        
+        var cColumn:CInt = CInt(column)
+
+        return NSData(bytes:sqlite3_column_blob(self.cStatement, cColumn), length:Int(sqlite3_column_bytes(self.cStatement, cColumn)))
     }
     
     // Other stuff
