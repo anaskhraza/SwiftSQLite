@@ -14,7 +14,9 @@ extension NSDate {
     
     func toString() -> String! {
         
-        var dateFormatter = NSDateFormatter()
+        let dateFormatter = NSDateFormatter()
+        dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
+        dateFormatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
         dateFormatter.dateFormat = isoStringFormat
         
         return dateFormatter.stringFromDate(self)
@@ -25,7 +27,9 @@ extension String {
     
     func toDate() -> NSDate! {
         
-        var dateFormatter = NSDateFormatter()
+        let dateFormatter = NSDateFormatter()
+        dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
+        dateFormatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
         dateFormatter.dateFormat = isoStringFormat
         
         return dateFormatter.dateFromString(self)
