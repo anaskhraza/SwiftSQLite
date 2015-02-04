@@ -10,6 +10,9 @@ import Foundation
 
 let isoStringFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'"
 
+let SQLITE_STATIC = sqlite3_destructor_type(COpaquePointer(bitPattern: 0))
+let SQLITE_TRANSIENT = sqlite3_destructor_type(COpaquePointer(bitPattern: -1))
+
 extension NSDate {
     
     func toString() -> String! {
@@ -91,7 +94,7 @@ class SQLiteStatement : NSObject {
             
             var cValue = v.cStringUsingEncoding(NSUTF8StringEncoding)
             
-            var cStatusCode = bridged_sqlite3_bind_text(self.cStatement, cColumn, cValue!, -1)
+            var cStatusCode = sqlite3_bind_text(self.cStatement, cColumn, cValue!, -1, SQLITE_TRANSIENT)
             
             return SQLiteStatusCode(rawValue: cStatusCode)!
         }
@@ -107,7 +110,7 @@ class SQLiteStatement : NSObject {
             
             var cValue = v.toString().cStringUsingEncoding(NSUTF8StringEncoding)
             
-            var cStatusCode = bridged_sqlite3_bind_text(self.cStatement, cColumn, cValue!, -1)
+            var cStatusCode = sqlite3_bind_text(self.cStatement, cColumn, cValue!, -1, SQLITE_TRANSIENT)
             
             return SQLiteStatusCode(rawValue: cStatusCode)!
         }
@@ -167,8 +170,8 @@ class SQLiteStatement : NSObject {
         if let v = value {
             
             if ( v.length > 0 ) {
-                
-                var cStatusCode = bridged_sqlite3_bind_blob(self.cStatement, cColumn, value!.bytes, CInt(value!.length))
+
+                var cStatusCode = sqlite3_bind_blob(self.cStatement, cColumn, value!.bytes, CInt(value!.length), nil)
             
                 return SQLiteStatusCode(rawValue: cStatusCode)!
             }
