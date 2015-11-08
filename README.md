@@ -1,7 +1,7 @@
 SwiftSQLite
 ===========
 
-This is an SQLite wrapper/binding for Apple's Swift language, that's low level enough to be quick to learn and easy to use for anyone that has used sqlite previous.
+This is an SQLite wrapper/binding for Apple's Swift language, that's low level enough to be quick to learn and easy to use for anyone that has used sqlite previously.
 
 Object oriented
 ---
@@ -9,30 +9,46 @@ As sqlite itself is largely laid out in an object oriented fashion, this library
 
 Setting up the database
 ---
-Ensure that Blank.sqlite is included as a resource in your project, and set the ```instanceDatabaseFilename:String = "Instance.sqlite"``` line in ```SQLiteDatabase.swift``` appropriately. The first time you call ```SQLiteDatabase.sharedInstance```, a new database file will be created from the blank file.
+The code is largely proof-of-concept and is intended as code drop to get you started. There are however to main functions you should find useful for initialising/manipulating databases: ```SQLiteDatabase.createDatabaseWithFilename(filename: String, withBlankDatabaseFilename blankDatabaseFilename: String)``` and ```SQLiteDatabase.deleteDatabase(filename: String)```. Both return a ```true``` or ```false``` value for whether or not the operation completed successfully.
+
+Using a database
+---
+Once you have a working database setup, you'll have to initialize a ```SQLiteDatabase``` object first, as follows:
+
+    let database = SQLiteDatabase()
+
+This will usually then require you to open the database:
+
+    database.open("myDatabse.sqlite")
+
+This design is effectively a Swift/Object-oriented version of the lower level C SQLite, which presumes you make create a database but then open it later, hence why the open operation is not rolled into the constructor. Also, ```open``` returns a status code for whether the call was successful or not.
 
 Example usage
 ---
 
-    var statement = SQLiteStatement(database: SQLiteDatabase.sharedInstance)
-        
+    let database = SQLiteDatabase()
+    
+    database.open("myDatabse.sqlite")
+    
+    let statement = SQLiteStatement(database: database)
+    
     if ( statement.prepare("SELECT * FROM tableName WHERE Id = ?") != .Ok )
     {
         /* handle error */
     }
-        
-    statement.bindInt(1, value: 123);
-        
+    
+    statement.bindInt(1, value: 123)
+    
     if ( statement.step() == .Row )
     {
         /* do something with statement */
-        var id:Int = statement.getIntAt(0)
-        var stringValue:String? = statement.getStringAt(1)
-        var boolValue:Bool = statement.getBoolAt(2)
-        var dateValue:NSDate? = statement.getDateAt(3)
+        let id:Int = statement.getIntAt(0)
+        let stringValue:String? = statement.getStringAt(1)
+        let boolValue:Bool = statement.getBoolAt(2)
+        let dateValue:NSDate? = statement.getDateAt(3)
     }
-        
-    statement.finalizeStatement(); /* not called finalize() due to destructor/language keyword */
+    
+    statement.finalizeStatement() /* not called finalize() due to destructor/language keyword */
 
 Work in progress
 ---
