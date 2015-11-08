@@ -56,7 +56,7 @@ These classes are very bare at the moment. Feel free to flesh them out more, imp
 
 Copyright
 ---
-You may do whatever you want to with these classes.
+You may do whatever you want to with these classes. NOTE: As of v2.0, for extra assurance, I've added the MIT license to all code file headers.
 
 Contact
 ---
