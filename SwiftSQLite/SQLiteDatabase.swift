@@ -2,7 +2,7 @@
 //  SQLiteDatabase.swift
 //  SwiftSQLite
 //
-//  Copyright (c) 2014-2015 Chris Simpson (chris@victoryonemedia.com)
+//  Copyright (c) 2014-2017 Chris Simpson (chris.m.simpson@icloud.com)
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -24,37 +24,42 @@
 
 import Foundation
 
-public class SQLiteDatabase : NSObject {
+public class SQLiteDatabase {
     
-    var cDb:COpaquePointer = nil
+    internal var cDb: OpaquePointer?
     
-    override init () {
+    public init() {
         
     }
     
+    @discardableResult
     public func open(filename: String) -> SQLiteStatusCode? {
         
-        if let cFilename = filename.cStringUsingEncoding(NSUTF8StringEncoding) {
+        if let cFilename = filename.cString(using: String.Encoding.utf8) {
+            
             return SQLiteStatusCode(rawValue: sqlite3_open(cFilename, &self.cDb))
         }
         
         return nil
     }
     
-    public class func deleteDatabase(filename: String) -> Bool {
+    @discardableResult
+    public class func delete(filename: String) -> Bool {
         
-        var pathToDocuments = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
+        var pathToDocuments = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
         
-        let documentsDirectory:AnyObject = pathToDocuments[0]
+        let documentsDirectory = pathToDocuments[0]
         
-        let databasePath = documentsDirectory.stringByAppendingPathComponent(filename)
+        let databasePath = documentsDirectory.appending(filename)
         
-        if ( NSFileManager.defaultManager().isReadableFileAtPath(databasePath) ) {
+        if FileManager.default.isReadableFile(atPath: databasePath) {
             
             do {
-                try NSFileManager.defaultManager().removeItemAtPath(databasePath)
+                
+                try FileManager.default.removeItem(atPath: databasePath)
             }
             catch {
+                
                 print("Failed to delete database")
                 return false
             }
@@ -63,22 +68,25 @@ public class SQLiteDatabase : NSObject {
         return true
     }
     
-    public class func createDatabaseWithFilename(filename: String, withBlankDatabaseFilename blankDatabaseFilename: String) -> Bool {
+    @discardableResult
+    public class func createDatabase(withFilename filename: String, blankDatabaseFilename: String) -> Bool {
         
-        if let pathToResources = NSBundle.mainBundle().resourcePath, blankDatabasePath = NSURL(string: pathToResources)?.URLByAppendingPathComponent(blankDatabaseFilename) {
+        if let pathToResources = Bundle.main.resourcePath, let blankDatabasePath = URL(string: pathToResources)?.appendingPathComponent(blankDatabaseFilename) {
             
-            let pathToDocuments = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
+            let pathToDocuments = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
             
-            if let documentsDirectoryString = pathToDocuments.first, documentsDirectory = NSURL(string: documentsDirectoryString) {
+            if let documentsDirectoryString = pathToDocuments.first, let documentsDirectory = URL(string: documentsDirectoryString) {
                 
-                let databasePath = documentsDirectory.URLByAppendingPathComponent(filename)
+                let databasePath = documentsDirectory.appendingPathComponent(filename)
                 
-                if let _path = databasePath.path where !NSFileManager.defaultManager().isReadableFileAtPath(_path) {
+                if !FileManager.default.isReadableFile(atPath: databasePath.path) {
                     
                     do {
-                        try NSFileManager.defaultManager().copyItemAtURL(blankDatabasePath, toURL: databasePath)
+                        
+                        try FileManager.default.copyItem(at: blankDatabasePath, to: databasePath)
                     }
                     catch {
+                        
                         return false
                     }
                 }
@@ -92,10 +100,11 @@ public class SQLiteDatabase : NSObject {
     
     // MARK: Transaction
     
+    @discardableResult
     public func beginTransaction() -> SQLiteStatusCode? {
         
-        if let cSqlQuery = "BEGIN TRANSACTION".cStringUsingEncoding(NSUTF8StringEncoding) {
-        
+        if let cSqlQuery = "BEGIN TRANSACTION".cString(using: String.Encoding.utf8) {
+            
             let rawStatusCode = sqlite3_exec(self.cDb, cSqlQuery, nil, nil, nil)
             
             return SQLiteStatusCode(rawValue: rawStatusCode)
@@ -104,10 +113,11 @@ public class SQLiteDatabase : NSObject {
         return nil
     }
     
+    @discardableResult
     public func commitTransaction() -> SQLiteStatusCode? {
         
-        if let cSqlQuery = "COMMIT TRANSACTION".cStringUsingEncoding(NSUTF8StringEncoding) {
-        
+        if let cSqlQuery = "COMMIT TRANSACTION".cString(using: String.Encoding.utf8) {
+            
             let rawStatusCode = sqlite3_exec(self.cDb, cSqlQuery, nil, nil, nil)
             
             return SQLiteStatusCode(rawValue: rawStatusCode)
@@ -116,9 +126,10 @@ public class SQLiteDatabase : NSObject {
         return nil
     }
     
-    public func rollbackTranscaction() -> SQLiteStatusCode? {
+    @discardableResult
+    public func rollbackTransaction() -> SQLiteStatusCode? {
         
-        if let cSqlQuery = "ROLLBACK TRANSACTION".cStringUsingEncoding(NSUTF8StringEncoding) {
+        if let cSqlQuery = "ROLLBACK TRANSACTION".cString(using: String.Encoding.utf8) {
             
             let rawStatusCode = sqlite3_exec(self.cDb, cSqlQuery, nil, nil, nil)
             
@@ -130,9 +141,8 @@ public class SQLiteDatabase : NSObject {
     
     // MARK: Error
     
-    public func getErrorMessage() -> String? {
-        return String.fromCString(sqlite3_errmsg(self.cDb))
+    public var errorMessage: String? {
+        
+        return String(cString: sqlite3_errmsg(self.cDb))
     }
 }
-
-

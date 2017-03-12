@@ -1,4 +1,7 @@
 //
+//  ViewController.swift
+//  SwiftSQLite
+//
 //  Copyright (c) 2014-2017 Chris Simpson (chris.m.simpson@icloud.com)
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,5 +22,8 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 
-#include <stdio.h>
-#import <sqlite3.h>
+import UIKit
+
+class ViewController: UIViewController {
+
+}

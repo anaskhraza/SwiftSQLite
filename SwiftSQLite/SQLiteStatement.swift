@@ -2,7 +2,7 @@
 //  SQLiteStatement.swift
 //  SwiftSQLite
 //
-//  Copyright (c) 2014-2015 Chris Simpson (chris@victoryonemedia.com)
+//  Copyright (c) 2014-2017 Chris Simpson (chris.m.simpson@icloud.com)
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -28,54 +28,55 @@ let isoStringFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'"
 
 // Taken from: http://stackoverflow.com/questions/30760353/cannot-invoke-initializer-for-type-sqlite3-destructor-type
 
-internal let SQLITE_STATIC = unsafeBitCast(0, sqlite3_destructor_type.self)
-internal let SQLITE_TRANSIENT = unsafeBitCast(-1, sqlite3_destructor_type.self)
+internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
+internal let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
-extension NSDate {
+public extension Date {
     
-    func toString() -> String? {
+    public func toString() -> String? {
         
-        let dateFormatter = NSDateFormatter()
-        dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
-        dateFormatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         dateFormatter.dateFormat = isoStringFormat
         
-        return dateFormatter.stringFromDate(self)
+        return dateFormatter.string(from: self)
     }
 }
 
-extension String {
+public extension String {
     
-    func toDate() -> NSDate? {
+    public func toDate() -> Date? {
         
-        let dateFormatter = NSDateFormatter()
-        dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
-        dateFormatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         dateFormatter.dateFormat = isoStringFormat
         
-        return dateFormatter.dateFromString(self)
+        return dateFormatter.date(from: self)
     }
 }
 
-public class SQLiteStatement : NSObject {
+public class SQLiteStatement: NSObject {
     
     // Swift
-    var database:SQLiteDatabase
+    internal var database: SQLiteDatabase
     
     // C
-    var cStatement:COpaquePointer = nil
+    internal var cStatement: OpaquePointer?
     
-    public init( database:SQLiteDatabase ) {
+    public init(database: SQLiteDatabase) {
         
         self.database = database
     }
     
     // MARK: Prepare
     
+    @discardableResult
     public func prepare(sqlQuery: String) -> SQLiteStatusCode? {
         
-        if let cSqlQuery = sqlQuery.cStringUsingEncoding(NSUTF8StringEncoding) {
-        
+        if let cSqlQuery = sqlQuery.cString(using: String.Encoding.utf8) {
+            
             let rawStatusCode = sqlite3_prepare_v2(self.database.cDb, cSqlQuery, -1, &self.cStatement, nil)
             
             return SQLiteStatusCode(rawValue: rawStatusCode)
@@ -86,166 +87,215 @@ public class SQLiteStatement : NSObject {
     
     // MARK: Reset
     
+    @discardableResult
     public func reset() -> SQLiteStatusCode? {
         
-        let rawStatusCode = sqlite3_reset(self.cStatement)
+        if let cStatement = self.cStatement {
+            
+            let rawStatusCode = sqlite3_reset(cStatement)
         
-        return SQLiteStatusCode(rawValue: rawStatusCode)
+            return SQLiteStatusCode(rawValue: rawStatusCode)
+        }
+        
+        return nil
     }
     
     // MARK: Binding
     
-    public func bindNull(column: Int) -> SQLiteStatusCode? {
+    @discardableResult
+    public func bindNull(at index: Int) -> SQLiteStatusCode? {
         
-        let rawStatusCode = sqlite3_bind_null(self.cStatement, Int32(column))
+        if let cStatement = self.cStatement {
         
-        return SQLiteStatusCode(rawValue: rawStatusCode)
+            let rawStatusCode = sqlite3_bind_null(cStatement, Int32(index))
+        
+            return SQLiteStatusCode(rawValue: rawStatusCode)
+        }
+        
+        return nil
     }
     
-    public func bindString(column: Int, value: String?) -> SQLiteStatusCode? {
+    @discardableResult
+    public func bind(string: String?, at index: Int) -> SQLiteStatusCode? {
         
-        if let _value = value, cStringValue = _value.cStringUsingEncoding(NSUTF8StringEncoding) {
+        if let cStatement = self.cStatement, let _string = string, let cStringValue = _string.cString(using: String.Encoding.utf8) {
             
-            let rawStatusCode = sqlite3_bind_text(self.cStatement, Int32(column), cStringValue, -1, SQLITE_TRANSIENT)
+            let rawStatusCode = sqlite3_bind_text(cStatement, Int32(index), cStringValue, -1, SQLITE_TRANSIENT)
             
             return SQLiteStatusCode(rawValue: rawStatusCode)
         }
         
-        return bindNull(column)
+        return bindNull(at: index)
     }
     
-    public func bindDate(column: Int, value: NSDate?) -> SQLiteStatusCode? {
+    @discardableResult
+    public func bind(date: Date?, at index: Int) -> SQLiteStatusCode? {
         
-        if let _value = value, cValue = _value.toString()?.cStringUsingEncoding(NSUTF8StringEncoding) {
+        if let cStatement = self.cStatement, let _date = date, let cString = _date.toString()?.cString(using: String.Encoding.utf8) {
             
-            let rawStatusCode = sqlite3_bind_text(self.cStatement, Int32(column), cValue, -1, SQLITE_TRANSIENT)
+            let rawStatusCode = sqlite3_bind_text(cStatement, Int32(index), cString, -1, SQLITE_TRANSIENT)
             
             return SQLiteStatusCode(rawValue: rawStatusCode)
         }
         
-        return bindNull(column)
+        return self.bindNull(at: index)
     }
     
-    public func bindIntPrimaryKey(column: Int, value: Int?) -> SQLiteStatusCode? {
-
-        if let _value = value where _value > 0 {
-
-            return self.bindInt(column, value: _value)
-        }
-
-        return bindNull(column)
-    }
-
-    public func bindInt(column: Int, value: Int?) -> SQLiteStatusCode? {
+    @discardableResult
+    public func bind(primaryKeyInt: Int?, at index: Int) -> SQLiteStatusCode? {
         
-        if let _value = value {
+        if let _primaryKeyInt = primaryKeyInt, _primaryKeyInt > 0 {
             
-            let rawStatusCode = sqlite3_bind_int(self.cStatement, Int32(column), Int32(_value))
+            return self.bind(int: _primaryKeyInt, at: index)
+        }
+        
+        return self.bindNull(at: index)
+    }
+    
+    @discardableResult
+    public func bind(int: Int?, at index: Int) -> SQLiteStatusCode? {
+        
+        if let cStatement = self.cStatement, let _int = int {
+            
+            let rawStatusCode = sqlite3_bind_int(cStatement, Int32(index), Int32(_int))
             
             return SQLiteStatusCode(rawValue: rawStatusCode)
         }
         
-        return bindNull(column)
+        return self.bindNull(at: index)
     }
     
-    public func bindBool(column: Int, value: Bool?) -> SQLiteStatusCode? {
+    @discardableResult
+    public func bind(bool: Bool?, at index: Int) -> SQLiteStatusCode? {
         
-        if let _value = value {
+        if let cStatement = self.cStatement, let _bool = bool {
             
-            let intValue:Int32 = _value ? 1 : 0
+            let intValue: Int32 = _bool ? 1 : 0
             
-            let rawStatusCode = sqlite3_bind_int(self.cStatement, Int32(column), intValue)
+            let rawStatusCode = sqlite3_bind_int(cStatement, Int32(index), intValue)
             
             return SQLiteStatusCode(rawValue: rawStatusCode)
         }
         
-        return bindNull(column)
+        return self.bindNull(at: index)
     }
     
-    public func bindData(column: Int, value: NSData?) -> SQLiteStatusCode? {
+    @discardableResult
+    public func bind(data: Data?, at index: Int) -> SQLiteStatusCode? {
         
-        if let _value = value where _value.length > 0 {
+        if let cStatement = self.cStatement, let _data = data, _data.count > 0 {
             
-            let rawStatusCode = sqlite3_bind_blob(self.cStatement, Int32(column), _value.bytes, Int32(_value.length), nil)
+            let rawStatusCode = sqlite3_bind_blob(cStatement, Int32(index), (_data as NSData).bytes, Int32(_data.count), nil)
             
             return SQLiteStatusCode(rawValue: rawStatusCode)
         }
         
-        return bindNull(column)
+        return self.bindNull(at: index)
     }
     
-    public func bindDouble(column: Int, value: Double?) -> SQLiteStatusCode? {
+    @discardableResult
+    public func bind(double: Double?, at index: Int) -> SQLiteStatusCode? {
         
-        if let _value = value {
+        if let cStatement = self.cStatement, let _double = double {
             
-            let rawStatusCode = sqlite3_bind_double(self.cStatement, Int32(column), _value)
+            let rawStatusCode = sqlite3_bind_double(cStatement, Int32(index), _double)
             
             return SQLiteStatusCode(rawValue: rawStatusCode)
         }
-
-        return bindNull(column)
+        
+        return self.bindNull(at: index)
     }
     
     // MARK: Getters
     
-    public func getStringAt(column: Int) -> String? {
+    public func string(at column: Int) -> String? {
         
-        let cString = sqlite3_column_text(self.cStatement, Int32(column))
-        
-        if ( cString != nil ) {
+        if let cStatement = self.cStatement, let cString = sqlite3_column_text(cStatement, Int32(column)) {
             
-            let cStringPtr = UnsafePointer<Int8>(cString)
+            let cStringPtr = UnsafePointer<UInt8>(cString)
             
-            return String.fromCString(cStringPtr)
+            return String(cString: cStringPtr)
         }
         else {
+            
             return nil
         }
     }
     
-    public func getIntAt(column: Int) -> Int {
+    public func int(at column: Int) -> Int? {
         
-        return Int(sqlite3_column_int(self.cStatement, Int32(column)))
-    }
-    
-    public func getBoolAt(column: Int) -> Bool {
-        
-        let intValue = sqlite3_column_int(self.cStatement, Int32(column))
-        
-        return intValue != 0
-    }
-    
-    public func getDateAt(column: Int) -> NSDate? {
-    
-        let cString = sqlite3_column_text(self.cStatement, Int32(column))
-        
-        if ( cString != nil ) {
+        if let cStatement = self.cStatement {
             
-            let cStringPtr = UnsafePointer<Int8>(cString)
-            return String.fromCString(cStringPtr)?.toDate()
+            return Int(sqlite3_column_int(cStatement, Int32(column)))
+        }
+        
+        return nil
+    }
+    
+    public func bool(at column: Int) -> Bool? {
+        
+        if let cStatement = self.cStatement {
+            
+            let intValue = sqlite3_column_int(cStatement, Int32(column))
+        
+            return intValue != 0
+        }
+        
+        return nil
+    }
+    
+    public func date(at column: Int) -> Date? {
+        
+        if let cString = sqlite3_column_text(self.cStatement, Int32(column)) {
+            
+            let cStringPtr = UnsafePointer<UInt8>(cString)
+            
+            return String(cString: cStringPtr).toDate()
         }
         else {
+            
             return nil
         }
     }
     
-    public func getDoubleAt(column: Int) -> Double {
-    
-        return Double(sqlite3_column_double(self.cStatement, Int32(column)))
+    public func double(at column: Int) -> Double? {
+        
+        if let cStatement = self.cStatement {
+        
+            return Double(sqlite3_column_double(cStatement, Int32(column)))
+        }
+        
+        return nil
     }
     
-    public func getDataAt(column: Int) -> NSData? {
+    public func data(at column: Int) -> Data? {
         
-        return NSData(bytes:sqlite3_column_blob(self.cStatement, Int32(column)), length: Int(sqlite3_column_bytes(self.cStatement, Int32(column))))
+        if let cStatement = self.cStatement {
+            
+            let _column = Int32(column)
+            
+            if let pointer = sqlite3_column_blob(cStatement, _column) {
+                
+                let numberOfBytes = Int(sqlite3_column_bytes(cStatement, _column))
+                
+                return Data(bytes: pointer, count: numberOfBytes)
+            }
+        }
+        
+        return nil
     }
     
     // Other stuff
     
+    @discardableResult
     public func step() -> SQLiteStatusCode? {
+        
         return SQLiteStatusCode(rawValue: sqlite3_step(self.cStatement))
     }
     
+    @discardableResult
     public func finalizeStatement() -> SQLiteStatusCode? {
+        
         return SQLiteStatusCode(rawValue: sqlite3_finalize(self.cStatement))
     }
 }
