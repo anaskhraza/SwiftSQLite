@@ -54,6 +54,10 @@ if statement.step() == .row {
 statement.finalizeStatement() /* not called finalize() due to destructor/language keyword */
 ```
 
+Cocoapods
+---
+Unfortunately you can't use bridging headers (used to import the C types/methods from libsqlite3) in Swift framework targets which is how Swift cocoapods work, so you'll have to manually import this code into your project.
+
 Work in progress
 ---
 These classes are very bare at the moment. Feel free to flesh them out more, improve them and push your changes so I can incorporate them.
