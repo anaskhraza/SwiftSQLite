@@ -15,8 +15,6 @@
 		83F6662B1E7575690022AE9F /* SQLiteStatusCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F6662A1E7575690022AE9F /* SQLiteStatusCode.swift */; };
 		83F6662D1E7575980022AE9F /* SQLiteStatement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F6662C1E7575980022AE9F /* SQLiteStatement.swift */; };
 		83F666311E75761F0022AE9F /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 83F666301E75761F0022AE9F /* libsqlite3.tbd */; };
-		83F666351E757BC90022AE9F /* Podfile in Resources */ = {isa = PBXBuildFile; fileRef = 83F666341E757BC90022AE9F /* Podfile */; };
-		83F666371E757C480022AE9F /* .swiftlint.yml in Resources */ = {isa = PBXBuildFile; fileRef = 83F666361E757C480022AE9F /* .swiftlint.yml */; };
 		FFC363E85A3BD51D78CAE037 /* Pods_SwiftSQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 402E194A6B78A739A3CF7B18 /* Pods_SwiftSQLite.framework */; };
 /* End PBXBuildFile section */
 
@@ -36,6 +34,7 @@
 		83F666321E7576410022AE9F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		83F666341E757BC90022AE9F /* Podfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Podfile; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		83F666361E757C480022AE9F /* .swiftlint.yml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .swiftlint.yml; sourceTree = "<group>"; };
+		83F6663A1E7581920022AE9F /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		CF136669DD8EE9D2BF1D041D /* Pods-SwiftSQLite.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwiftSQLite.debug.xcconfig"; path = "Pods/Target Support Files/Pods-SwiftSQLite/Pods-SwiftSQLite.debug.xcconfig"; sourceTree = "<group>"; };
 		FA50570CC8FD6C38203C98BF /* Pods-SwiftSQLite.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwiftSQLite.release.xcconfig"; path = "Pods/Target Support Files/Pods-SwiftSQLite/Pods-SwiftSQLite.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -56,6 +55,7 @@
 		83F6660A1E7574F70022AE9F = {
 			isa = PBXGroup;
 			children = (
+				83F6663A1E7581920022AE9F /* LICENSE */,
 				83F666361E757C480022AE9F /* .swiftlint.yml */,
 				83F666341E757BC90022AE9F /* Podfile */,
 				83F666321E7576410022AE9F /* README.md */,
@@ -171,8 +171,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83F666351E757BC90022AE9F /* Podfile in Resources */,
-				83F666371E757C480022AE9F /* .swiftlint.yml in Resources */,
 				83F666211E7574F70022AE9F /* LaunchScreen.storyboard in Resources */,
 				83F6661C1E7574F70022AE9F /* Main.storyboard in Resources */,
 			);
