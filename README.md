@@ -19,36 +19,40 @@ Once you have a working database setup, you'll have to initialize a ```SQLiteDat
 
 This will usually then require you to open the database:
 
-    database.open("myDatabse.sqlite")
+    database.open(filename: "myDatabse.sqlite")
 
 This design is effectively a Swift/Object-oriented version of the lower level C SQLite, which presumes you make create a database but then open it later, hence why the open operation is not rolled into the constructor. Also, ```open``` returns a status code for whether the call was successful or not.
 
 Example usage
 ---
 
-    let database = SQLiteDatabase()
+```
+let database = SQLiteDatabase()
+
+database.open(filename: "myDatabse.sqlite")
+
+let statement = SQLiteStatement(database: database)
+
+if statement.prepare(sqlQuery: "SELECT * FROM tableName WHERE Id = ?") != .ok {
     
-    database.open("myDatabse.sqlite")
-    
-    let statement = SQLiteStatement(database: database)
-    
-    if ( statement.prepare("SELECT * FROM tableName WHERE Id = ?") != .Ok )
-    {
-        /* handle error */
-    }
-    
-    statement.bindInt(1, value: 123)
-    
-    if ( statement.step() == .Row )
-    {
-        /* do something with statement */
-        let id:Int = statement.getIntAt(0)
-        let stringValue:String? = statement.getStringAt(1)
-        let boolValue:Bool = statement.getBoolAt(2)
-        let dateValue:NSDate? = statement.getDateAt(3)
-    }
-    
-    statement.finalizeStatement() /* not called finalize() due to destructor/language keyword */
+    /* handle error */
+}
+
+statement.bind(int: 1, at: 123)
+
+if statement.step() == .row {
+
+    /* do something with statement */
+
+    let id: Int? = statement.int(at: 0)
+
+    let string: String? = statement.string(at: 1)
+    let bool: Bool? = statement.bool(at: 2)
+    let date: Date? = statement.date(at: 3)
+}
+
+statement.finalizeStatement() /* not called finalize() due to destructor/language keyword */
+```
 
 Work in progress
 ---
@@ -60,4 +64,4 @@ You may do whatever you want to with these classes. NOTE: As of v2.0, for extra 
 
 Contact
 ---
-Contact me via [chris@victoryonemedia.com](mailto:chris@victoryonemedia.com) or [http://twitter.com/ChrisMSimpson](http://twitter.com/ChrisMSimpson) if you have any questions or improvements.
+Contact me via [chris.m.simpson@icloud.com](mailto:chris.m.simpson@icloud.com) or [http://twitter.com/ChrisMSimpson](http://twitter.com/ChrisMSimpson) if you have any questions or improvements.
