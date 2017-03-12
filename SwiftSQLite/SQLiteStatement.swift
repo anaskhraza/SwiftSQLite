@@ -63,7 +63,7 @@ public class SQLiteStatement: NSObject {
     internal var database: SQLiteDatabase
     
     // C
-    internal var cStatement: OpaquePointer? = nil
+    internal var cStatement: OpaquePointer?
     
     public init(database: SQLiteDatabase) {
         

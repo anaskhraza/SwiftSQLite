@@ -26,34 +26,4 @@ import UIKit
 
 class ViewController: UIViewController {
 
-    override func viewDidLoad() {
-        
-        super.viewDidLoad()
-        
-        let database = SQLiteDatabase()
-        
-        database.open(filename: "myDatabse.sqlite")
-        
-        let statement = SQLiteStatement(database: database)
-        
-        if statement.prepare(sqlQuery: "SELECT * FROM tableName WHERE Id = ?") != .ok {
-            /* handle error */
-        }
-        
-        statement.bind(int: 1, at: 123)
-        
-        if statement.step() == .row {
-            
-            /* do something with statement */
-            
-            let id: Int? = statement.int(at: 0)
-            
-            let string: String? = statement.string(at: 1)
-            let bool: Bool? = statement.bool(at: 2)
-            let date: Date? = statement.date(at: 3)
-        }
-        
-        statement.finalizeStatement() /* not called finalize() due to destructor/language keyword */
-    }
 }
-

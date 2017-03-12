@@ -26,7 +26,7 @@ import Foundation
 
 public class SQLiteDatabase {
     
-    internal var cDb: OpaquePointer? = nil
+    internal var cDb: OpaquePointer?
     
     public init() {
         
@@ -146,5 +146,3 @@ public class SQLiteDatabase {
         return String(cString: sqlite3_errmsg(self.cDb))
     }
 }
-
-

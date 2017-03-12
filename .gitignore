@@ -1,3 +1,11 @@
 .DS_Store
-SwiftSQLite.xcodeproj/xcuserdata/*.xcuserdatad/
-SwiftSQLite.xcodeproj/project.xcworkspace/xcuserdata/*.xcuserdatad/
+build/
+*.xcuserdatad
+xcuserdata
+Pods/
+*.ipa
+*.xcuserstate
+*.xcworkspace
+*.xcworkspace/xcuserdata/*.xcuserdatad/
+*/*.xcodeproj/xcuserdata/
+
